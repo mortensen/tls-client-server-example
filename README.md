@@ -1,2 +1,3 @@
 # openepp
-# asdf
+
+Open EPP client and server implementation
