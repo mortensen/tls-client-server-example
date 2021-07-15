@@ -1,10 +1,15 @@
 package de.mortensenit.server;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.security.KeyStore;
 import java.util.ResourceBundle;
 
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
@@ -13,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.mortensenit.model.Constants;
 import de.mortensenit.model.exceptions.PortInUseException;
+import de.mortensenit.model.util.ConfigurationContext;
 
 /**
  * Server side server implementation of the EPP service. Opening the configured
@@ -26,11 +32,6 @@ public class ServerStarter {
 
 	private Logger logger = LogManager.getLogger();
 
-	/**
-	 * The server configuration file must be named app.properties. The keys are
-	 * defined as constants in ServerConfigurationProperties class
-	 */
-	private ResourceBundle applicationProperties;
 
 	/**
 	 * Entry point for the server side service
@@ -50,23 +51,13 @@ public class ServerStarter {
 	private void start() throws Exception {
 		logger.info("Starting up...");
 
-		// load server configuration
-		logger.info("Loading application properties.");
-		try {
-			applicationProperties = ResourceBundle.getBundle("app");
-		} catch (Exception e) {
-			logger.error("No configuration file found! Shutting down...", e);
-			return;
-		}
-		logger.info("Server configuration found:");
-		for (String key : applicationProperties.keySet()) {
-			logger.info(key + ": " + applicationProperties.getString(key));
-		}
-
 		// open server port
 		try {
-			if (applicationProperties.containsKey(ServerConfigurationProperties.SERVER_MODE) && applicationProperties
-					.getString(ServerConfigurationProperties.SERVER_MODE).equalsIgnoreCase("TLS")) {
+			if (ConfigurationContext.getNeeded(ServerConfigurationProperties.SERVER_MODE).equalsIgnoreCase("TLS")) {
+				
+				if (ConfigurationContext.getNeeded(ServerConfigurationProperties.SERVER_MODE)equalsIgnoreCase("TLS")) {
+
+				
 				startTLSServerSocket();
 			} else {
 				startPlainServerSocket();
@@ -85,14 +76,15 @@ public class ServerStarter {
 	 */
 	private void startTLSServerSocket() throws PortInUseException, IOException {
 
-		try (SSLServerSocket sslServerSocket = (SSLServerSocket) SSLServerSocketFactory.getDefault()
-				.createServerSocket(7000)) {
+		ServerSocketFactory factory = getTlsServerSocketFactory("", "");
+
+		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
 			while (true) {
 				logger.info("Waiting for TLS connections on port 7000...");
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-				//Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(System.out::println);
+				// Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(System.out::println);
 				// sslServerSocket.setEnabledCipherSuites(new String[] {
 				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
@@ -134,6 +126,35 @@ public class ServerStarter {
 			logger.info("Server stopped.");
 		}
 
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	private static ServerSocketFactory getTlsServerSocketFactory(String password, String keyStoreFileName) {
+		SSLServerSocketFactory serverSocketFactory = null;
+		try {
+			// set up key manager to do server authentication
+			SSLContext sslContext;
+			KeyManagerFactory keyManagerFactory;
+			KeyStore keyStore;
+			char[] passphrase = password.toCharArray();
+
+			sslContext = SSLContext.getInstance("TLS");
+			keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+			keyStore = KeyStore.getInstance("JKS");
+
+			keyStore.load(new FileInputStream(keyStoreFileName), passphrase);
+			keyManagerFactory.init(keyStore, passphrase);
+			sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+
+			serverSocketFactory = sslContext.getServerSocketFactory();
+			return serverSocketFactory;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }

@@ -68,6 +68,8 @@ public class ClientStarter {
 			clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
 			//Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
 			//clientSocket.setEnabledCipherSuites(new String[] { Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
+			
+			clientSocket.startHandshake();
 
 			OutputStream os = clientSocket.getOutputStream();
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));

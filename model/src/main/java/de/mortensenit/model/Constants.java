@@ -33,6 +33,6 @@ public final class Constants {
 	 */
 	public static final String CIPHER_TLS_AES_128_GCM_SHA256 = "TLS_AES_128_GCM_SHA256";
 	
-	public static final String CIPHER_TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
+	//public static final String CIPHER_TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
 
 }
