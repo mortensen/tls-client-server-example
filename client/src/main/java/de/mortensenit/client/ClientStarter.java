@@ -13,8 +13,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.mortensenit.model.Constants;
+import de.mortensenit.model.util.ConfigurationContext;
 
 /**
+ * Client side implementation of the EPP service. This client will connect to
+ * the specified host and port.
  * 
  * @author frederik.mortensen
  *
@@ -39,7 +42,8 @@ public class ClientStarter {
 	@SuppressWarnings("unused")
 	private void startPlainClient() {
 		logger.info("Trying to connect to server...");
-		try (Socket socket = new Socket("localhost", 7000);
+		try (Socket socket = new Socket(ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
 				OutputStream os = socket.getOutputStream();
 				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
 
@@ -64,11 +68,14 @@ public class ClientStarter {
 		try {
 			logger.info("Trying to connect to server...");
 
-			SSLSocket clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket("localhost", 7000);
+			SSLSocket clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
+					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
 			clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-			//Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
-			//clientSocket.setEnabledCipherSuites(new String[] { Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
-			
+			// Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
+			// clientSocket.setEnabledCipherSuites(new String[] {
+			// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
+
 			clientSocket.startHandshake();
 
 			OutputStream os = clientSocket.getOutputStream();
@@ -88,4 +95,15 @@ public class ClientStarter {
 			logger.error("A client exception occured!", e2);
 		}
 	}
+
+	// disable hostname verification
+//	static {
+//		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(new javax.net.ssl.HostnameVerifier() {
+//
+//			public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+//				return true;
+//			}
+//		});
+//	}
+
 }

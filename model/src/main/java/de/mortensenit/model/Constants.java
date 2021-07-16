@@ -15,11 +15,23 @@ public final class Constants {
 	}
 
 	/**
+	 * start the server unencrypted in plaintext mode
+	 */
+	public static final String ENCRYPTION_MODE_PLAIN = "PLAIN";
+
+	/**
+	 * start the server encrypted with TLS
+	 */
+	public static final String ENCRYPTION_MODE_TLS = "TLS";
+
+	public static final String JAVA_KEYSTORE = "JKS";
+
+	/**
 	 * The Transport Layer Security (TLS) Protocol Version 1.3
 	 * (https://tools.ietf.org/html/rfc8446)
 	 */
 	public static final String PROTOCOL_TLS_1_3 = "TLSv1.3";
-	
+
 	/**
 	 * The Transport Layer Security (TLS) Protocol Version 1.2
 	 */
@@ -32,7 +44,10 @@ public final class Constants {
 	 * TLS_CHACHA20_POLY1305_SHA256 [RFC8439] cipher suites.
 	 */
 	public static final String CIPHER_TLS_AES_128_GCM_SHA256 = "TLS_AES_128_GCM_SHA256";
-	
-	//public static final String CIPHER_TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
+
+	// public static final String CIPHER_TLS_AES_256_GCM_SHA384 =
+	// "TLS_AES_256_GCM_SHA384";
+
+	public static final String KEY_MANAGER_ALGORITHM_SUNX509 = "SunX509";
 
 }

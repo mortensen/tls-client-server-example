@@ -1,11 +1,16 @@
 package de.mortensenit.server;
 
+import static de.mortensenit.server.ServerConfigKeys.CLIENT_AUTHENTICATION_NEEDED;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_FILE;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_PASSWORD;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_MODE;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyStore;
-import java.util.ResourceBundle;
+import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManagerFactory;
@@ -32,7 +37,6 @@ public class ServerStarter {
 
 	private Logger logger = LogManager.getLogger();
 
-
 	/**
 	 * Entry point for the server side service
 	 * 
@@ -53,11 +57,7 @@ public class ServerStarter {
 
 		// open server port
 		try {
-			if (ConfigurationContext.getNeeded(ServerConfigurationProperties.SERVER_MODE).equalsIgnoreCase("TLS")) {
-				
-				if (ConfigurationContext.getNeeded(ServerConfigurationProperties.SERVER_MODE)equalsIgnoreCase("TLS")) {
-
-				
+			if (ConfigurationContext.get(SERVER_MODE).equalsIgnoreCase(Constants.ENCRYPTION_MODE_TLS)) {
 				startTLSServerSocket();
 			} else {
 				startPlainServerSocket();
@@ -76,7 +76,8 @@ public class ServerStarter {
 	 */
 	private void startTLSServerSocket() throws PortInUseException, IOException {
 
-		ServerSocketFactory factory = getTlsServerSocketFactory("", "");
+		ServerSocketFactory factory = getTlsServerSocketFactory(ConfigurationContext.get(SERVER_KEYSTORE_FILE),
+				ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD));
 
 		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
@@ -84,15 +85,21 @@ public class ServerStarter {
 				logger.info("Waiting for TLS connections on port 7000...");
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-				// Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(System.out::println);
+
+				Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
+
+				// TODO: wie ?
 				// sslServerSocket.setEnabledCipherSuites(new String[] {
 				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
-				sslServerSocket.setNeedClientAuth(false);
+				// TODO: wie?
+				sslServerSocket
+						.setNeedClientAuth(Boolean.valueOf(ConfigurationContext.get(CLIENT_AUTHENTICATION_NEEDED)));
 
 				Socket sslClientSocket = sslServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();
 				clientConnectionThread.setClientSocket(sslClientSocket);
+				// TODO: threads sammeln irgendwo
 				Thread thread = new Thread(clientConnectionThread);
 				thread.start();
 			}
@@ -130,9 +137,11 @@ public class ServerStarter {
 
 	/**
 	 * 
+	 * @param keyStoreFileName
+	 * @param password
 	 * @return
 	 */
-	private static ServerSocketFactory getTlsServerSocketFactory(String password, String keyStoreFileName) {
+	private static ServerSocketFactory getTlsServerSocketFactory(String keyStoreFileName, String password) {
 		SSLServerSocketFactory serverSocketFactory = null;
 		try {
 			// set up key manager to do server authentication
@@ -141,9 +150,9 @@ public class ServerStarter {
 			KeyStore keyStore;
 			char[] passphrase = password.toCharArray();
 
-			sslContext = SSLContext.getInstance("TLS");
-			keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
-			keyStore = KeyStore.getInstance("JKS");
+			sslContext = SSLContext.getInstance(Constants.ENCRYPTION_MODE_TLS);
+			keyManagerFactory = KeyManagerFactory.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
+			keyStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
 
 			keyStore.load(new FileInputStream(keyStoreFileName), passphrase);
 			keyManagerFactory.init(keyStore, passphrase);
@@ -158,3 +167,9 @@ public class ServerStarter {
 	}
 
 }
+
+//
+//-Djavax.net.ssl.keyStore=serverkeystore.jks -Djavax.net.ssl.keyStorePassword=testtest -Djavax.net.debug=all
+//
+//-Djavax.net.ssl.trustStore=clienttruststore.jks -Djavax.net.ssl.trustStorePassword=testtest -Djavax.net.debug=all
+//

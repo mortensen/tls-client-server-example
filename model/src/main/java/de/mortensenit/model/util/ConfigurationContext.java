@@ -11,6 +11,8 @@ import org.apache.logging.log4j.Logger;
 /**
  * A class that manages application configuration via file system or other
  * resources. The current service uses app.properties to setup runtime behavior.
+ * The configuration will be loaded as soon as the application uses the context
+ * the first time.
  * 
  * @author frederik.mortensen
  *
