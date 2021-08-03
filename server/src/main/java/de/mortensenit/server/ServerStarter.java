@@ -161,7 +161,7 @@ public class ServerStarter {
 			serverSocketFactory = sslContext.getServerSocketFactory();
 			return serverSocketFactory;
 		} catch (Exception e) {
-			e.printStackTrace();
+			LogManager.getLogger().error(e);
 			return null;
 		}
 	}

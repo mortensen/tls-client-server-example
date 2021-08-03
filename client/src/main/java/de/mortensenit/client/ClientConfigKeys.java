@@ -9,6 +9,11 @@ package de.mortensenit.client;
 public class ClientConfigKeys {
 
 	/**
+	 * available client modes are PLAIN and TLS
+	 */
+	public static final String CLIENT_MODE = "client.mode";
+	
+	/**
 	 * The server host to be connected to
 	 */
 	public static final String SERVER_HOST = "server.host";
@@ -17,5 +22,5 @@ public class ClientConfigKeys {
 	 * The server port to be connected to
 	 */
 	public static final String SERVER_PORT = "server.port";
-
+	
 }

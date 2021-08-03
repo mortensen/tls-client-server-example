@@ -1,5 +1,7 @@
 package de.mortensenit.client;
 
+import static de.mortensenit.client.ClientConfigKeys.CLIENT_MODE;
+
 import java.io.BufferedWriter;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -32,30 +34,26 @@ public class ClientStarter {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		// new ClientStarter().startPlainClient();
-		new ClientStarter().startTLSClient();
+		// just get out of static
+		new ClientStarter().start();
 	}
 
 	/**
+	 * load application configuration properties, then start the client socket
 	 * 
+	 * @throws Exception
 	 */
-	@SuppressWarnings("unused")
-	private void startPlainClient() {
-		logger.info("Trying to connect to server...");
-		try (Socket socket = new Socket(ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
-				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
-				OutputStream os = socket.getOutputStream();
-				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
+	private void start() throws Exception {
+		logger.info("Starting up...");
 
-			logger.info("Connected.");
-			while (true) {
-				writer.append(".");
-				writer.newLine();
-				writer.flush();
-				Thread.sleep(1000);
+		try {
+			if (ConfigurationContext.get(CLIENT_MODE).equalsIgnoreCase(Constants.ENCRYPTION_MODE_TLS)) {
+				startTLSClient();
+			} else {
+				startPlainClient();
 			}
 		} catch (SocketException e) {
-			logger.error("Connection to server lost! Stopping client.");
+			logger.error("Connection to server lost! Stopping client.", e);
 		} catch (Exception e2) {
 			logger.error("A client exception occured!", e2);
 		}
@@ -63,36 +61,53 @@ public class ClientStarter {
 
 	/**
 	 * 
+	 * @throws SocketException
+	 * @throws Exception
 	 */
-	private void startTLSClient() {
-		try {
-			logger.info("Trying to connect to server...");
+	private void startTLSClient() throws SocketException, Exception {
+		logger.info("Trying to connect to the server via TLS...");
 
-			SSLSocket clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
-					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
-					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
-			clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-			// Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
-			// clientSocket.setEnabledCipherSuites(new String[] {
-			// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
+		SSLSocket clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
+				ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+		clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
+		// Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
+		// clientSocket.setEnabledCipherSuites(new String[] {
+		// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
-			clientSocket.startHandshake();
+		clientSocket.startHandshake();
 
-			OutputStream os = clientSocket.getOutputStream();
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+		OutputStream os = clientSocket.getOutputStream();
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
 
-			logger.info("Connected.");
+		logger.info("Connected.");
 
-			while (true) {
-				writer.append(".");
-				writer.newLine();
-				writer.flush();
-				Thread.sleep(1000);
-			}
-		} catch (SocketException e) {
-			logger.error("Connection to server lost! Stopping client.", e);
-		} catch (Exception e2) {
-			logger.error("A client exception occured!", e2);
+		while (true) {
+			writer.append(".");
+			writer.newLine();
+			writer.flush();
+			Thread.sleep(1000);
+		}
+	}
+
+	/**
+	 * 
+	 * @throws SocketException
+	 * @throws Exception
+	 */
+	private void startPlainClient() throws SocketException, Exception {
+		logger.info("Trying to connect to the server via PLAIN connection...");
+		Socket socket = new Socket(ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+		OutputStream os = socket.getOutputStream();
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));
+
+		logger.info("Connected.");
+		while (true) {
+			writer.append(".");
+			writer.newLine();
+			writer.flush();
+			Thread.sleep(1000);
 		}
 	}
 

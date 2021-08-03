@@ -9,7 +9,7 @@ package de.mortensenit.server;
 public final class ServerConfigKeys {
 
 	/**
-	 * available server modes are PLAIN and SSL
+	 * available server modes are PLAIN and TLS
 	 */
 	public static final String SERVER_MODE = "server.mode";
 
