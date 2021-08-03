@@ -1,0 +1,6 @@
+/.metadata/
+/target/
+.classpath
+.settings
+.idea
+.project
