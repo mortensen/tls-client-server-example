@@ -57,4 +57,17 @@ public class ConfigurationContextTest {
 		assertEquals("defaultValue", ConfigurationContext.get("invalid", "defaultValue"));
 	}
 
+	@Test
+	public void testGetBoolean() {
+		ConfigurationContext.reset();
+		assertTrue(ConfigurationContext.getBoolean("junit.booleanTrue"));
+		assertFalse(ConfigurationContext.getBoolean("junit.booleanFalse"));
+	}
+
+	@Test
+	public void testGetBooleanWithDefaultParameter() {
+		assertTrue(ConfigurationContext.getBoolean("invalid", true));
+		assertFalse(ConfigurationContext.getBoolean("invalid", false));
+	}
+
 }

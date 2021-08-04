@@ -137,6 +137,42 @@ public class ConfigurationContext {
 	}
 
 	/**
+	 * Load config value for a given key from the application configuration file.
+	 * 
+	 * @param key the property that needs to be configured
+	 * @return the value of the needed key from the loaded context
+	 * @throws IllegalArgumentException if the value for the given key was not set
+	 *                                  in the configuration
+	 * @throws MissingResourceException if no application properties configuration
+	 *                                  file was found
+	 */
+	public static Boolean getBoolean(String key) throws IllegalArgumentException, MissingResourceException {
+		String value = get(key, true);
+		return Boolean.valueOf(value);
+	}
+
+	/**
+	 * 
+	 * @param key          the property that needs to be configured
+	 * @param defaultValue returns this value if the given value was not configured
+	 * @return the value of the needed key from the loaded context or else the
+	 *         default value
+	 * @throws IllegalArgumentException if the value for the given key was not set
+	 *                                  in the configuration
+	 * @throws MissingResourceException if no application properties configuration
+	 *                                  file was found
+	 */
+	public static Boolean getBoolean(String key, boolean defaultValue)
+			throws IllegalArgumentException, MissingResourceException {
+		String value = get(key, false);
+		if (StringUtils.isNotNullOrEmpty(value)) {
+			return Boolean.valueOf(value);
+		} else {
+			return defaultValue;
+		}
+	}
+
+	/**
 	 * shows if the configuration context was already loaded
 	 */
 	public static boolean isInitialized() {
