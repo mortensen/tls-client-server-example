@@ -25,6 +25,19 @@ public final class ServerConfigKeys {
 	public static final String SERVER_KEYSTORE_PASSWORD = "server.keystore.password";
 
 	/**
+	 * the truststore file contains public keys from clients that are trusted by the
+	 * server, if client authentication is activated
+	 */
+	public static final String SERVER_TRUSTSTORE_FILE = "server.truststore.file";
+
+	/**
+	 * the truststore password protects the truststore which contains public keys
+	 * from clients that are trusted by the server, if client authentication is
+	 * activated
+	 */
+	public static final String SERVER_TRUSTSTORE_PASSWORD = "server.truststore.password";
+
+	/**
 	 * #defines wether a client authentication is needed or not
 	 */
 	public static final String CLIENT_AUTHENTICATION_NEEDED = "client.authentication.needed";

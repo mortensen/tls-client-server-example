@@ -78,7 +78,7 @@ public class ServerStarter {
 
 		ServerSocketFactory factory = getTlsServerSocketFactory(ConfigurationContext.get(SERVER_KEYSTORE_FILE),
 				ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD));
-
+		
 		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
 			while (true) {
@@ -86,15 +86,15 @@ public class ServerStarter {
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
 
-				Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
+				//Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
 
 				// TODO: wie ?
 				// sslServerSocket.setEnabledCipherSuites(new String[] {
 				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
-				// TODO: wie?
-				sslServerSocket
-						.setNeedClientAuth(Boolean.valueOf(ConfigurationContext.get(CLIENT_AUTHENTICATION_NEEDED)));
+				//TrustManagerComposition c = new  TrustManagerComposition();
+
+				sslServerSocket.setNeedClientAuth(ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED));
 
 				Socket sslClientSocket = sslServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();
@@ -136,10 +136,10 @@ public class ServerStarter {
 	}
 
 	/**
-	 * 
-	 * @param keyStoreFileName
-	 * @param password
-	 * @return
+	 * generate a TLS server socket factory using the configured keystore
+	 * @param keyStoreFileName the serverside keystore with the public and private keys
+	 * @param password the password for accessing the keystore
+	 * @return the server socket factory or null if it failed to initialize
 	 */
 	private static ServerSocketFactory getTlsServerSocketFactory(String keyStoreFileName, String password) {
 		SSLServerSocketFactory serverSocketFactory = null;
@@ -167,6 +167,10 @@ public class ServerStarter {
 	}
 
 }
+
+//https://stackoverflow.com/questions/55854904/javax-net-ssl-sslhandshakeexception-no-available-authentication-scheme
+
+//Your certificate is using the DSA algorithm, which has been deprecated a while ago in favor of RSA and is not supported at all in TLS1.3. Make sure to create RSA certificates instead.
 
 //
 //-Djavax.net.ssl.keyStore=serverkeystore.jks -Djavax.net.ssl.keyStorePassword=testtest -Djavax.net.debug=all

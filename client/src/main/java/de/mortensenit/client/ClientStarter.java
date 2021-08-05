@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -71,7 +72,9 @@ public class ClientStarter {
 				ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
 				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
 		clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-		// Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(System.out::println);
+		
+		//Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
+		
 		// clientSocket.setEnabledCipherSuites(new String[] {
 		// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
