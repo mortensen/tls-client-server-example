@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyStore;
-import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.KeyManagerFactory;
@@ -78,7 +77,7 @@ public class ServerStarter {
 
 		ServerSocketFactory factory = getTlsServerSocketFactory(ConfigurationContext.get(SERVER_KEYSTORE_FILE),
 				ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD));
-		
+
 		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
 			while (true) {
@@ -86,13 +85,14 @@ public class ServerStarter {
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
 
-				//Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
+				// Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e ->
+				// logger.debug(e));
 
 				// TODO: wie ?
 				// sslServerSocket.setEnabledCipherSuites(new String[] {
 				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
 
-				//TrustManagerComposition c = new  TrustManagerComposition();
+				// TrustManagerComposition c = new TrustManagerComposition();
 
 				sslServerSocket.setNeedClientAuth(ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED));
 
@@ -137,22 +137,24 @@ public class ServerStarter {
 
 	/**
 	 * generate a TLS server socket factory using the configured keystore
-	 * @param keyStoreFileName the serverside keystore with the public and private keys
-	 * @param password the password for accessing the keystore
+	 * 
+	 * @param keyStoreFileName the serverside keystore with the public and private
+	 *                         keys
+	 * @param keyStorePassword the password for accessing the keystore
 	 * @return the server socket factory or null if it failed to initialize
 	 */
-	private static ServerSocketFactory getTlsServerSocketFactory(String keyStoreFileName, String password) {
+	private static ServerSocketFactory getTlsServerSocketFactory(String keyStoreFileName, String keyStorePassword) {
 		SSLServerSocketFactory serverSocketFactory = null;
 		try {
 			// set up key manager to do server authentication
 			SSLContext sslContext;
 			KeyManagerFactory keyManagerFactory;
 			KeyStore keyStore;
-			char[] passphrase = password.toCharArray();
+			char[] passphrase = keyStorePassword != null ? keyStorePassword.toCharArray() : null;
 
 			sslContext = SSLContext.getInstance(Constants.ENCRYPTION_MODE_TLS);
 			keyManagerFactory = KeyManagerFactory.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
-			keyStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
+			keyStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE); // TODO: konfigurierbar PKCS12?
 
 			keyStore.load(new FileInputStream(keyStoreFileName), passphrase);
 			keyManagerFactory.init(keyStore, passphrase);
