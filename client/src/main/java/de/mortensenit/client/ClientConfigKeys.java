@@ -24,24 +24,35 @@ public class ClientConfigKeys {
 	public static final String SERVER_PORT = "server.port";
 
 	/**
+	 * If the client wants to authenticate itself against the server and send the
+	 * server its client certificate, this option must be activated and a keystore
+	 * must be set
+	 */
+	public static final String CLIENT_AUTHENTICATION_NEEDED = "client.authentication.needed";
+
+	/**
+	 * The keystore the client uses for authentication against the server. If client
+	 * authentication is activated, this file is needed to provide the client
+	 * certificate.
+	 */
+	public static final String CLIENT_KEYSTORE_FILE = "client.keystore.file";
+
+	/**
+	 * In case the client authentication is activated and the clients keystore is
+	 * password protected, then this provides the password for this keystore
+	 */
+	public static final String CLIENT_KEYSTORE_PASSWORD = "client.keystore.password";
+
+	/**
 	 * With this parameter you can disable validation of server side certificates
 	 * against the client keystore
 	 */
-	// TODO: im code einbauen / testen - deaktivieren
-	public static final String SERVER_AUTHENTICATION_NEEDED = "server.authentication.needed";
-	
-	/**
-	 * Contains the public keys of the trusted server certificates. This is needed
-	 * when server authentication is activated.
-	 */
-	// TODO: im code einbauen / testen
-	public static final String CLIENT_TRUSTSTORE_FILE = "client.truststore.file";
+	public static final String SERVER_VALIDATION_NEEDED = "server.validation.needed";
 
 	/**
-	 * Usually truststores should not be password protected as they only contain
-	 * public available content. The truststore password protects the truststore
-	 * which contains public keys of trusted clients.
+	 * Contains the public keys of the trusted server certificates. This is needed
+	 * when server validation is activated.
 	 */
-	public static final String CLIENT_TRUSTSTORE_PASSWORD = "client.truststore.password";
+	public static final String CLIENT_TRUSTSTORE_FILE = "client.truststore.file";
 
 }

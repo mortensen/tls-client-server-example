@@ -4,10 +4,12 @@ import static de.mortensenit.client.ClientConfigKeys.CLIENT_MODE;
 
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.security.KeyStore;
 
 import javax.net.SocketFactory;
@@ -73,14 +75,7 @@ public class ClientStarter {
 	private void startTLSClient() throws SocketException, Exception {
 		logger.info("Trying to connect to the server via TLS...");
 
-		String keyStoreFileName = null;
-		String keyStorePassword = null;
-		String trustStoreFileName = ConfigurationContext.get(ClientConfigKeys.CLIENT_TRUSTSTORE_FILE);
-
-		SocketFactory socketFactory = getTlsSocketFactory(keyStoreFileName, keyStorePassword, trustStoreFileName);
-		SSLSocket clientSocket = (SSLSocket) socketFactory.createSocket(
-				ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
-				Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+		SSLSocket clientSocket = createClientSocket();
 
 		clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
 
@@ -103,6 +98,46 @@ public class ClientStarter {
 			writer.flush();
 			Thread.sleep(1000);
 		}
+	}
+
+	/**
+	 * .<br />
+	 * This method replaces the system parameters for<br />
+	 * -Djavax.net.ssl.keyStore=...,<br />
+	 * -Djavax.net.ssl.keyStorePassword=... and<br />
+	 * -Djavax.net.ssl.trustStore=...<br />
+	 * with runtime configuration and an application config.
+	 * 
+	 * @return
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
+	private SSLSocket createClientSocket() throws UnknownHostException, IOException {
+
+		String keyStoreFileName = null;
+		String keyStorePassword = null;
+		String trustStoreFileName = null;
+		SSLSocket clientSocket = null;
+		
+		if (ConfigurationContext.getBoolean(ClientConfigKeys.CLIENT_AUTHENTICATION_NEEDED)) {
+			keyStoreFileName = ConfigurationContext.get(ClientConfigKeys.CLIENT_KEYSTORE_FILE);
+			keyStorePassword = ConfigurationContext.get(ClientConfigKeys.CLIENT_KEYSTORE_PASSWORD);
+		}
+		
+		if (ConfigurationContext.getBoolean(ClientConfigKeys.SERVER_VALIDATION_NEEDED)) {
+			trustStoreFileName = ConfigurationContext.get(ClientConfigKeys.CLIENT_TRUSTSTORE_FILE);
+
+			SocketFactory socketFactory = getTlsSocketFactory(keyStoreFileName, keyStorePassword, trustStoreFileName);
+			clientSocket = (SSLSocket) socketFactory.createSocket(
+					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+		} else {
+			// TODO: wie deaktiviert man die host prüfung?
+			clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
+					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+		}
+		return clientSocket;
 	}
 
 	/**
