@@ -4,22 +4,19 @@ import static de.mortensenit.server.ServerConfigKeys.CLIENT_AUTHENTICATION_NEEDE
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_FILE;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_PASSWORD;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_MODE;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_TRUSTSTORE_FILE;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyStore;
 
 import javax.net.ServerSocketFactory;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.mortensenit.controller.TLSController;
 import de.mortensenit.model.Constants;
 import de.mortensenit.model.exceptions.PortInUseException;
 import de.mortensenit.model.util.ConfigurationContext;
@@ -75,8 +72,9 @@ public class ServerStarter {
 	 */
 	private void startTLSServerSocket() throws PortInUseException, IOException {
 
-		ServerSocketFactory factory = getTlsServerSocketFactory(ConfigurationContext.get(SERVER_KEYSTORE_FILE),
-				ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD));
+		ServerSocketFactory factory = TLSController.getTlsServerSocketFactory(
+				ConfigurationContext.get(SERVER_KEYSTORE_FILE), ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD),
+				ConfigurationContext.get(SERVER_TRUSTSTORE_FILE));
 
 		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
@@ -91,8 +89,6 @@ public class ServerStarter {
 				// TODO: wie ?
 				// sslServerSocket.setEnabledCipherSuites(new String[] {
 				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
-
-				// TrustManagerComposition c = new TrustManagerComposition();
 
 				sslServerSocket.setNeedClientAuth(ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED));
 
@@ -135,47 +131,4 @@ public class ServerStarter {
 
 	}
 
-	/**
-	 * generate a TLS server socket factory using the configured keystore
-	 * 
-	 * @param keyStoreFileName the serverside keystore with the public and private
-	 *                         keys
-	 * @param keyStorePassword the password for accessing the keystore
-	 * @return the server socket factory or null if it failed to initialize
-	 */
-	private static ServerSocketFactory getTlsServerSocketFactory(String keyStoreFileName, String keyStorePassword) {
-		SSLServerSocketFactory serverSocketFactory = null;
-		try {
-			// set up key manager to do server authentication
-			SSLContext sslContext;
-			KeyManagerFactory keyManagerFactory;
-			KeyStore keyStore;
-			char[] passphrase = keyStorePassword != null ? keyStorePassword.toCharArray() : null;
-
-			sslContext = SSLContext.getInstance(Constants.ENCRYPTION_MODE_TLS);
-			keyManagerFactory = KeyManagerFactory.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
-			keyStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE); // TODO: konfigurierbar PKCS12?
-
-			keyStore.load(new FileInputStream(keyStoreFileName), passphrase);
-			keyManagerFactory.init(keyStore, passphrase);
-			sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-
-			serverSocketFactory = sslContext.getServerSocketFactory();
-			return serverSocketFactory;
-		} catch (Exception e) {
-			LogManager.getLogger().error(e);
-			return null;
-		}
-	}
-
 }
-
-//https://stackoverflow.com/questions/55854904/javax-net-ssl-sslhandshakeexception-no-available-authentication-scheme
-
-//Your certificate is using the DSA algorithm, which has been deprecated a while ago in favor of RSA and is not supported at all in TLS1.3. Make sure to create RSA certificates instead.
-
-//
-//-Djavax.net.ssl.keyStore=serverkeystore.jks -Djavax.net.ssl.keyStorePassword=testtest -Djavax.net.debug=all
-//
-//-Djavax.net.ssl.trustStore=clienttruststore.jks -Djavax.net.ssl.trustStorePassword=testtest -Djavax.net.debug=all
-//

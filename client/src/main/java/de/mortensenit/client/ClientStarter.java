@@ -3,25 +3,21 @@ package de.mortensenit.client;
 import static de.mortensenit.client.ClientConfigKeys.CLIENT_MODE;
 
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.security.KeyStore;
 
 import javax.net.SocketFactory;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.mortensenit.controller.TLSController;
 import de.mortensenit.model.Constants;
 import de.mortensenit.model.util.ConfigurationContext;
 
@@ -118,16 +114,17 @@ public class ClientStarter {
 		String keyStorePassword = null;
 		String trustStoreFileName = null;
 		SSLSocket clientSocket = null;
-		
+
 		if (ConfigurationContext.getBoolean(ClientConfigKeys.CLIENT_AUTHENTICATION_NEEDED)) {
 			keyStoreFileName = ConfigurationContext.get(ClientConfigKeys.CLIENT_KEYSTORE_FILE);
 			keyStorePassword = ConfigurationContext.get(ClientConfigKeys.CLIENT_KEYSTORE_PASSWORD);
 		}
-		
+
 		if (ConfigurationContext.getBoolean(ClientConfigKeys.SERVER_VALIDATION_NEEDED)) {
 			trustStoreFileName = ConfigurationContext.get(ClientConfigKeys.CLIENT_TRUSTSTORE_FILE);
 
-			SocketFactory socketFactory = getTlsSocketFactory(keyStoreFileName, keyStorePassword, trustStoreFileName);
+			SocketFactory socketFactory = TLSController.getTlsSocketFactory(keyStoreFileName, keyStorePassword,
+					trustStoreFileName);
 			clientSocket = (SSLSocket) socketFactory.createSocket(
 					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
 					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
@@ -158,51 +155,6 @@ public class ClientStarter {
 			writer.newLine();
 			writer.flush();
 			Thread.sleep(1000);
-		}
-	}
-
-	/**
-	 * generate a TLS server socket factory using the configured keystore
-	 * 
-	 * @param keyStoreFileName the serverside keystore with the public and private
-	 *                         keys
-	 * @param keyStorePassword the password for accessing the keystore
-	 * @return the server socket factory or null if it failed to initialize
-	 */
-	private static SocketFactory getTlsSocketFactory(String keyStoreFileName, String keyStorePassword,
-			String trustStoreFileName) {
-		SSLSocketFactory socketFactory = null;
-		try {
-			// set up key manager to do server authentication
-			SSLContext sslContext;
-			KeyManagerFactory keyManagerFactory;
-			TrustManagerFactory trustManagerFactory;
-			KeyStore keyStore;
-			KeyStore trustStore;
-			char[] keyStorePassphrase = keyStorePassword != null ? keyStorePassword.toCharArray() : null;
-
-			sslContext = SSLContext.getInstance(Constants.ENCRYPTION_MODE_TLS);
-			keyManagerFactory = KeyManagerFactory.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
-			trustManagerFactory = TrustManagerFactory.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
-			keyStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
-			trustStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
-
-			FileInputStream fis = null;
-			if (keyStoreFileName != null) {
-				fis = new FileInputStream(keyStoreFileName);
-			}
-
-			keyStore.load(fis, keyStorePassphrase);
-			trustStore.load(new FileInputStream(trustStoreFileName), null);
-			keyManagerFactory.init(keyStore, keyStorePassphrase);
-			trustManagerFactory.init(trustStore);
-			sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
-
-			socketFactory = sslContext.getSocketFactory();
-			return socketFactory;
-		} catch (Exception e) {
-			LogManager.getLogger().error(e);
-			return null;
 		}
 	}
 
