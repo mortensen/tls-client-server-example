@@ -9,6 +9,7 @@ import static de.mortensenit.server.ServerConfigKeys.SERVER_TRUSTSTORE_FILE;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
@@ -39,6 +40,9 @@ public class ServerStarter {
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception {
+
+		System.setProperty("javax.net.debug", "all");
+
 		// just get out of static
 		new ServerStarter().start();
 	}
@@ -82,13 +86,9 @@ public class ServerStarter {
 				logger.info("Waiting for TLS connections on port 7000...");
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-
-				// Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e ->
-				// logger.debug(e));
-
-				// TODO: wie ?
-				// sslServerSocket.setEnabledCipherSuites(new String[] {
-				// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
+				// TEST
+				Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
+				sslServerSocket.setEnabledCipherSuites(new String[] { "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384" });
 
 				sslServerSocket.setNeedClientAuth(ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED));
 

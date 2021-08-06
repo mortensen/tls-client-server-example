@@ -38,6 +38,9 @@ public class ClientStarter {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
+		
+		System.setProperty("javax.net.debug", "all");
+		
 		// just get out of static
 		new ClientStarter().start();
 	}
@@ -74,12 +77,7 @@ public class ClientStarter {
 		SSLSocket clientSocket = createClientSocket();
 
 		clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-
-		// Arrays.asList(clientSocket.getEnabledCipherSuites()).forEach(e ->
-		// logger.debug(e));
-
-		// clientSocket.setEnabledCipherSuites(new String[] {
-		// Constants.CIPHER_TLS_AES_256_GCM_SHA384 });
+		clientSocket.setEnabledCipherSuites(new String[] { "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384" });
 
 		clientSocket.startHandshake();
 
