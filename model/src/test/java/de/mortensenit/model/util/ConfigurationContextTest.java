@@ -41,6 +41,7 @@ public class ConfigurationContextTest {
 		ConfigurationContext.reset();
 		assertEquals("junit1", ConfigurationContext.get("junit.value1"));
 		assertThrows(IllegalArgumentException.class, () -> ConfigurationContext.get("invalid"));
+		assertThrows(IllegalArgumentException.class, () -> ConfigurationContext.get(null));
 	}
 
 	@Test
@@ -68,6 +69,19 @@ public class ConfigurationContextTest {
 	public void testGetBooleanWithDefaultParameter() {
 		assertTrue(ConfigurationContext.getBoolean("invalid", true));
 		assertFalse(ConfigurationContext.getBoolean("invalid", false));
+	}
+
+	@Test
+	public void testGetValues() {
+		ConfigurationContext.reset();
+		String[] result = ConfigurationContext.getValues("junit.strings.commaSeparated");
+		assertEquals(3, result.length);
+		assertEquals("val1", result[0]);
+		assertEquals("val3", result[2]);
+
+		result = ConfigurationContext.getValues("junit.booleanTrue");
+		assertEquals(1, result.length);
+		assertEquals("true", result[0]);
 	}
 
 }

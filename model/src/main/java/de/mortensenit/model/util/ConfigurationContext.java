@@ -137,7 +137,8 @@ public class ConfigurationContext {
 	}
 
 	/**
-	 * Load config value for a given key from the application configuration file.
+	 * Load config value for a given key from the application configuration file and
+	 * parse it to boolean.
 	 * 
 	 * @param key the property that needs to be configured
 	 * @return the value of the needed key from the loaded context
@@ -152,6 +153,8 @@ public class ConfigurationContext {
 	}
 
 	/**
+	 * Load config value for a given key from the application configuration file and
+	 * parse it to boolean.
 	 * 
 	 * @param key          the property that needs to be configured
 	 * @param defaultValue returns this value if the given value was not configured
@@ -170,6 +173,27 @@ public class ConfigurationContext {
 		} else {
 			return defaultValue;
 		}
+	}
+
+	/**
+	 * Load config value for a given key from the application configuration file.
+	 * Then split it comma separated and trim it.
+	 * 
+	 * @param key the property that needs to be configured
+	 * @return a comma separated list witht the values of the needed key from the
+	 *         loaded context
+	 * @throws IllegalArgumentException if the value for the given key was not set
+	 *                                  in the configuration
+	 * @throws MissingResourceException if no application properties configuration
+	 *                                  file was found
+	 */
+	public static String[] getValues(String key) {
+		String value = get(key, true);
+		String[] values = value.split(",");
+		for (Integer i = 0; i < values.length; i++) {
+			values[i] = values[i].trim();
+		}
+		return values;
 	}
 
 	/**
