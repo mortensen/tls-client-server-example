@@ -1,6 +1,7 @@
 package de.mortensenit.server;
 
 import static de.mortensenit.server.ServerConfigKeys.CLIENT_AUTHENTICATION_NEEDED;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_ENABLED_CIPHER_SUITES;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_FILE;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_PASSWORD;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_MODE;
@@ -9,7 +10,6 @@ import static de.mortensenit.server.ServerConfigKeys.SERVER_TRUSTSTORE_FILE;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
@@ -76,9 +76,13 @@ public class ServerStarter {
 	 */
 	private void startTLSServerSocket() throws PortInUseException, IOException {
 
-		ServerSocketFactory factory = TLSController.getTlsServerSocketFactory(
-				ConfigurationContext.get(SERVER_KEYSTORE_FILE), ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD),
-				ConfigurationContext.get(SERVER_TRUSTSTORE_FILE));
+		String keyStoreFile = ConfigurationContext.get(SERVER_KEYSTORE_FILE);
+		String keyStorePwd = ConfigurationContext.get(SERVER_KEYSTORE_PASSWORD);
+		String trustStoreFile = ConfigurationContext.get(SERVER_TRUSTSTORE_FILE);
+		boolean clientAuthNeeded = ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED);
+
+		ServerSocketFactory factory = TLSController.getTlsServerSocketFactory(keyStoreFile, keyStorePwd,
+				trustStoreFile);
 
 		try (SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(7000)) {
 
@@ -86,11 +90,17 @@ public class ServerStarter {
 				logger.info("Waiting for TLS connections on port 7000...");
 
 				sslServerSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-				// TEST
-				Arrays.asList(sslServerSocket.getEnabledCipherSuites()).forEach(e -> logger.debug(e));
-				sslServerSocket.setEnabledCipherSuites(new String[] { "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384" });
 
-				sslServerSocket.setNeedClientAuth(ConfigurationContext.getBoolean(CLIENT_AUTHENTICATION_NEEDED));
+				String[] cipherSuites = ConfigurationContext.getValues(SERVER_ENABLED_CIPHER_SUITES, null);
+				if (cipherSuites != null) {
+					logger.info("Setting enabled cipher suites: ");
+					for (String cipherSuite : cipherSuites) {
+						logger.info(cipherSuite);
+					}
+					sslServerSocket.setEnabledCipherSuites(cipherSuites);
+				}
+
+				sslServerSocket.setNeedClientAuth(clientAuthNeeded);
 
 				Socket sslClientSocket = sslServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();

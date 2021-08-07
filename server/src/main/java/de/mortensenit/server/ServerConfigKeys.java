@@ -34,6 +34,11 @@ public final class ServerConfigKeys {
 	 * #defines wether a client authentication is needed or not
 	 */
 	public static final String CLIENT_AUTHENTICATION_NEEDED = "client.authentication.needed";
+	
+	/**
+	 * comma separated list of the enabled cipher suites for tls
+	 */
+	public static final String SERVER_ENABLED_CIPHER_SUITES = "server.enabled.cipher.suites";
 
 	/**
 	 * Class should never be instantiated

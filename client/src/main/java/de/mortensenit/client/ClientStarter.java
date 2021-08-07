@@ -1,5 +1,6 @@
 package de.mortensenit.client;
 
+import static de.mortensenit.client.ClientConfigKeys.CLIENT_ENABLED_CIPHER_SUITES;
 import static de.mortensenit.client.ClientConfigKeys.CLIENT_MODE;
 
 import java.io.BufferedWriter;
@@ -77,7 +78,15 @@ public class ClientStarter {
 		SSLSocket clientSocket = createClientSocket();
 
 		clientSocket.setEnabledProtocols(new String[] { Constants.PROTOCOL_TLS_1_2 });
-		clientSocket.setEnabledCipherSuites(new String[] { "TLS_DHE_DSS_WITH_AES_256_GCM_SHA384" });
+
+		String[] cipherSuites = ConfigurationContext.getValues(CLIENT_ENABLED_CIPHER_SUITES, null);
+		if (cipherSuites != null) {
+			logger.info("Setting enabled cipher suites: ");
+			for (String cipherSuite : cipherSuites) {
+				logger.info(cipherSuite);
+			}
+			clientSocket.setEnabledCipherSuites(cipherSuites);
+		}
 
 		clientSocket.startHandshake();
 

@@ -2,6 +2,7 @@ package de.mortensenit.model.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,6 +50,7 @@ public class ConfigurationContextTest {
 		ConfigurationContext.reset();
 		assertThrows(IllegalArgumentException.class, () -> ConfigurationContext.get("invalid1"));
 		assertThrows(IllegalArgumentException.class, () -> ConfigurationContext.get("invalid2", true));
+		assertEquals("junit1", ConfigurationContext.get("junit.value1"));
 	}
 
 	@Test
@@ -56,6 +58,9 @@ public class ConfigurationContextTest {
 		ConfigurationContext.reset();
 		assertEquals("junit1", ConfigurationContext.get("junit.value1", "defaultValue"));
 		assertEquals("defaultValue", ConfigurationContext.get("invalid", "defaultValue"));
+		assertEquals("", ConfigurationContext.get("invalid", ""));
+		assertNull(ConfigurationContext.get("invalid", null));
+		assertNull(ConfigurationContext.get("invalid", false));
 	}
 
 	@Test
@@ -82,6 +87,19 @@ public class ConfigurationContextTest {
 		result = ConfigurationContext.getValues("junit.booleanTrue");
 		assertEquals(1, result.length);
 		assertEquals("true", result[0]);
+	}
+
+	@Test
+	public void testGetValuesWithDefaultValue() {
+		ConfigurationContext.reset();
+		String[] defaultValues = null;
+		String[] result = ConfigurationContext.getValues("invalid", defaultValues);
+		assertNull(defaultValues);
+
+		defaultValues = new String[] { "def1", "def2" };
+		result = ConfigurationContext.getValues("invalid", defaultValues);
+		assertEquals(2, result.length);
+		assertEquals("def2", result[1]);
 	}
 
 }

@@ -6,7 +6,7 @@ package de.mortensenit.client;
  * @author frederik.mortensen
  *
  */
-public class ClientConfigKeys {
+public final class ClientConfigKeys {
 
 	/**
 	 * available client modes are PLAIN and TLS
@@ -54,5 +54,17 @@ public class ClientConfigKeys {
 	 * when server validation is activated.
 	 */
 	public static final String CLIENT_TRUSTSTORE_FILE = "client.truststore.file";
+
+	/**
+	 * comma separated list of the enabled cipher suites for tls
+	 */
+	public static final String CLIENT_ENABLED_CIPHER_SUITES = "client.enabled.cipher.suites";
+
+	/**
+	 * class should never be instantiated
+	 */
+	private ClientConfigKeys() {
+
+	}
 
 }

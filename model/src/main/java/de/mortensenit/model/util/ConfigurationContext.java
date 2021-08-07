@@ -110,7 +110,7 @@ public class ConfigurationContext {
 			if (needed) {
 				throw new IllegalArgumentException(key);
 			} else
-				return "";
+				return null;
 		} else {
 			return value;
 		}
@@ -189,6 +189,32 @@ public class ConfigurationContext {
 	 */
 	public static String[] getValues(String key) {
 		String value = get(key, true);
+		String[] values = value.split(",");
+		for (Integer i = 0; i < values.length; i++) {
+			values[i] = values[i].trim();
+		}
+		return values;
+	}
+
+	/**
+	 * Load config value for a given key from the application configuration file.
+	 * Then split it comma separated and trim it.
+	 * 
+	 * @param key           the property that needs to be configured
+	 * @param defaultValues the default values if none were configured
+	 * @return a comma separated list witht the values of the needed key from the
+	 *         loaded context
+	 * @throws IllegalArgumentException if the value for the given key was not set
+	 *                                  in the configuration
+	 * @throws MissingResourceException if no application properties configuration
+	 *                                  file was found
+	 */
+	public static String[] getValues(String key, String[] defaultValues) {
+		String value = get(key, false);
+
+		if (value == null)
+			return defaultValues;
+
 		String[] values = value.split(",");
 		for (Integer i = 0; i < values.length; i++) {
 			values[i] = values[i].trim();
