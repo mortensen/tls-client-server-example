@@ -2,6 +2,7 @@ package de.mortensenit.server;
 
 import static de.mortensenit.server.ServerConfigKeys.CLIENT_AUTHENTICATION_NEEDED;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_ENABLED_CIPHER_SUITES;
+import static de.mortensenit.server.ServerConfigKeys.SERVER_EXTENDED_LOGGING;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_FILE;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_KEYSTORE_PASSWORD;
 import static de.mortensenit.server.ServerConfigKeys.SERVER_MODE;
@@ -41,7 +42,8 @@ public class ServerStarter {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		System.setProperty("javax.net.debug", "all");
+		if (ConfigurationContext.getBoolean(SERVER_EXTENDED_LOGGING, false))
+			System.setProperty("javax.net.debug", "all");
 
 		// just get out of static
 		new ServerStarter().start();
@@ -100,7 +102,9 @@ public class ServerStarter {
 					sslServerSocket.setEnabledCipherSuites(cipherSuites);
 				}
 
-				sslServerSocket.setNeedClientAuth(clientAuthNeeded);
+				// Servers normally authenticate themselves, and clients are not required to do
+				// sslServerSocket.setNeedClientAuth(clientAuthNeeded);
+				sslServerSocket.setWantClientAuth(clientAuthNeeded);
 
 				Socket sslClientSocket = sslServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();

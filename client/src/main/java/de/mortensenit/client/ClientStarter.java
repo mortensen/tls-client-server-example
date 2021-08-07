@@ -1,6 +1,7 @@
 package de.mortensenit.client;
 
 import static de.mortensenit.client.ClientConfigKeys.CLIENT_ENABLED_CIPHER_SUITES;
+import static de.mortensenit.client.ClientConfigKeys.CLIENT_EXTENDED_LOGGING;
 import static de.mortensenit.client.ClientConfigKeys.CLIENT_MODE;
 
 import java.io.BufferedWriter;
@@ -13,7 +14,6 @@ import java.net.UnknownHostException;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,9 +39,10 @@ public class ClientStarter {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		
-		System.setProperty("javax.net.debug", "all");
-		
+
+		if (ConfigurationContext.getBoolean(CLIENT_EXTENDED_LOGGING, false))
+			System.setProperty("javax.net.debug", "all");
+
 		// just get out of static
 		new ClientStarter().start();
 	}
@@ -136,10 +137,16 @@ public class ClientStarter {
 					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
 					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
 		} else {
-			// TODO: wie deaktiviert man die host prüfung?
-			clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
+//			clientSocket = (SSLSocket) SSLSocketFactory.getDefault().createSocket(
+//					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
+//					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+
+			SocketFactory socketFactory = TLSController.getTlsSocketFactory(keyStoreFileName, keyStorePassword,
+					trustStoreFileName);
+			clientSocket = (SSLSocket) socketFactory.createSocket(
 					ConfigurationContext.get(ClientConfigKeys.SERVER_HOST),
 					Integer.valueOf(ConfigurationContext.get(ClientConfigKeys.SERVER_PORT)));
+
 		}
 		return clientSocket;
 	}
@@ -164,15 +171,5 @@ public class ClientStarter {
 			Thread.sleep(1000);
 		}
 	}
-
-	// disable hostname verification
-//	static {
-//		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(new javax.net.ssl.HostnameVerifier() {
-//
-//			public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
-//				return true;
-//			}
-//		});
-//	}
 
 }

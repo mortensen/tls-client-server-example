@@ -2,6 +2,7 @@ package de.mortensenit.controller;
 
 import java.io.FileInputStream;
 import java.security.KeyStore;
+import java.security.cert.CertificateException;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
@@ -9,7 +10,9 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.logging.log4j.LogManager;
 
@@ -67,22 +70,24 @@ public abstract class TLSController {
 			keyStore.load(fis, keyStorePassphrase);
 			keyManagerFactory.init(keyStore, keyStorePassphrase);
 
-			// set up trust manager to do server validation
-			TrustManagerFactory trustManagerFactory = TrustManagerFactory
-					.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
-			KeyStore trustStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
-
 			fis = null;
 			if (trustStoreFileName != null) {
+				// set up trust manager to do server validation
+				TrustManagerFactory trustManagerFactory = TrustManagerFactory
+						.getInstance(Constants.KEY_MANAGER_ALGORITHM_SUNX509);
+				KeyStore trustStore = KeyStore.getInstance(Constants.JAVA_KEYSTORE);
+
 				fis = new FileInputStream(trustStoreFileName);
+
+				// trust stores should not have passwords
+				trustStore.load(fis, null);
+				trustManagerFactory.init(trustStore);
+
+				sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+			} else {
+				sslContext.init(keyManagerFactory.getKeyManagers(), getNoopTrustManager(), null);
 			}
 
-			// trust stores should not have passwords
-			trustStore.load(fis, null);
-			trustManagerFactory.init(trustStore);
-
-			// initialize context and return socket factory
-			sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
 			socketFactory = sslContext.getSocketFactory();
 			return socketFactory;
 
@@ -149,6 +154,34 @@ public abstract class TLSController {
 			LogManager.getLogger().error(e);
 			return null;
 		}
+	}
+
+	/**
+	 * In case the server certificate should not be checked at the handshake and we
+	 * trust any remote server, we can use this trust manager.<br />
+	 * <br />
+	 * SAFETY WARNING: The usage of this method is UNSAFE and could cause
+	 * man-in-the-middle attacks!
+	 * 
+	 * @return
+	 */
+	private static TrustManager[] getNoopTrustManager() {
+		TrustManager[] trustAllServerCertificatesTrustManager = new TrustManager[] { new X509TrustManager() {
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+
+			@Override
+			public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
+					throws CertificateException {
+			}
+
+			@Override
+			public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
+					throws CertificateException {
+			}
+		} };
+		return trustAllServerCertificatesTrustManager;
 	}
 
 }

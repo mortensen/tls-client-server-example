@@ -59,6 +59,11 @@ public final class ClientConfigKeys {
 	 * comma separated list of the enabled cipher suites for tls
 	 */
 	public static final String CLIENT_ENABLED_CIPHER_SUITES = "client.enabled.cipher.suites";
+	
+	/**
+	 * enables javax.net.debug = all. This parameter is optional.
+	 */
+	public static final String CLIENT_EXTENDED_LOGGING = "client.extended.logging";
 
 	/**
 	 * class should never be instantiated
