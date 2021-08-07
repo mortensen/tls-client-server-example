@@ -45,7 +45,8 @@ public final class ClientConfigKeys {
 
 	/**
 	 * With this parameter you can disable validation of server side certificates
-	 * against the client keystore
+	 * against the client keystore<br /><br />
+	 * Security Warning: Disabling this validation is insecure and can cause man-in-the-middle attacks
 	 */
 	public static final String SERVER_VALIDATION_NEEDED = "server.validation.needed";
 

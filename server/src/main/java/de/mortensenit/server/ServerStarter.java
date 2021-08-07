@@ -11,6 +11,8 @@ import static de.mortensenit.server.ServerConfigKeys.SERVER_TRUSTSTORE_FILE;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
@@ -34,6 +36,8 @@ import de.mortensenit.model.util.ConfigurationContext;
 public class ServerStarter {
 
 	private Logger logger = LogManager.getLogger();
+
+	private List<Thread> openConnections = new ArrayList<>();
 
 	/**
 	 * Entry point for the server side service
@@ -103,15 +107,15 @@ public class ServerStarter {
 				}
 
 				// Servers normally authenticate themselves, and clients are not required to do
-				// sslServerSocket.setNeedClientAuth(clientAuthNeeded);
 				sslServerSocket.setWantClientAuth(clientAuthNeeded);
 
 				Socket sslClientSocket = sslServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();
 				clientConnectionThread.setClientSocket(sslClientSocket);
-				// TODO: threads sammeln irgendwo
+
 				Thread thread = new Thread(clientConnectionThread);
 				thread.start();
+				openConnections.add(thread);
 			}
 
 		} finally {
@@ -135,8 +139,10 @@ public class ServerStarter {
 				Socket plainClientSocket = plainServerSocket.accept();
 				ClientConnectionThread clientConnectionThread = new ClientConnectionThread();
 				clientConnectionThread.setClientSocket(plainClientSocket);
+
 				Thread thread = new Thread(clientConnectionThread);
 				thread.start();
+				openConnections.add(thread);
 			}
 
 		} finally {
