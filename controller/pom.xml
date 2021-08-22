@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>de.mortensenit</groupId>
-		<artifactId>parent</artifactId>
+		<artifactId>client-server-example-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>controller</artifactId>
